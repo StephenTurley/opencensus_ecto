@@ -69,6 +69,24 @@ defmodule OpencensusEctoTest do
     )
   end
 
+  test "overrides the span name with a function" do
+    attach_handler(span_name: fn %{repo: r, source: s} -> "query:#{inspect(r)}:#{s}" end)
+
+    Repo.all(User)
+
+    assert_span(
+      name: "query:OpencensusEcto.TestRepo:users",
+      attributes: %{
+        "query" => _,
+        "source" => "users",
+        "total_time_microseconds" => _,
+        "decode_time_microseconds" => _,
+        "query_time_microseconds" => _,
+        "queue_time_microseconds" => _
+      }
+    )
+  end
+
   test "collects multiple spans" do
     user = Repo.insert!(%User{email: "opencensus@erlang.org"})
     Repo.insert!(%Post{body: "We got traced!", user: user})

@@ -34,6 +34,11 @@ defmodule OpencensusEcto do
       defaults to the concatenation of the event name with periods, e.g.
       `"blog.repo.query"`. This will always be followed with a colon and the
       source (the table name for SQL adapters).
+
+    * `:span_name` - a unary function that will be called with the event
+      metadata to compute the entire name of the span. Setting this will
+      override the `:span_prefix` option.
+
   """
   def setup(event_name, config \\ []) do
     :telemetry.attach({__MODULE__, event_name}, event_name, &__MODULE__.handle_event/4, config)
@@ -61,10 +66,13 @@ defmodule OpencensusEcto do
       time_unit = Keyword.get(config, :time_unit, :microsecond)
 
       span_name =
-        case Keyword.fetch(config, :span_prefix) do
-          {:ok, prefix} -> prefix
-          :error -> Enum.join(event, ".")
-        end <> ":#{source}"
+        with nil <- List.keyfind(config, :span_name, 0),
+             nil <- List.keyfind(config, :span_prefix, 0) do
+          Enum.join(event, ".") <> ":#{source}"
+        else
+          {:span_name, f} when is_function(f, 1) -> f.(metadata)
+          {:span_prefix, prefix} -> "#{prefix}:#{source}"
+        end
 
       base_attributes =
         Map.merge(
