@@ -40,10 +40,10 @@ defmodule OpencensusEcto.MixProject do
 
   defp deps do
     [
-      {:telemetry, "~> 0.4.0"},
+      {:telemetry, "~> 1.0"},
       {:opencensus, "~> 0.9.0"},
       {:ex_doc, "~> 0.21.0", only: [:dev], runtime: false},
-      {:ecto_sql, ">= 3.0.0", only: [:test]},
+      {:ecto_sql, ">= 3.7.0", only: [:test]},
       {:postgrex, ">= 0.15.0", only: [:test]}
     ]
   end
